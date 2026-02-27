@@ -1,4 +1,10 @@
-{ inputs, config, pkgs, lib, ... }:
+{
+  inputs,
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 {
   users.users.nodev = {
     name = "nodev";
@@ -11,6 +17,7 @@
       "input"
       "audio"
       "video"
+      "bluetooth"
     ];
     shell = pkgs.fish;
   };

@@ -60,16 +60,13 @@ in
         foliate
         discord
         signal-desktop
-        #blueberry
         github-desktop
-        alacritty
         pavucontrol
-	gitkraken
-	eddie
-	qbittorrent
-	jellyfin-desktop
-	#tmux
-	#mpv
+        gitkraken
+        eddie
+        qbittorrent
+        jellyfin-desktop
+        #mpv
 
         # CLI
         fastfetch
@@ -80,7 +77,7 @@ in
         wmctrl
 
         # Tools
-	mangohud
+        mangohud
         bat
         fd
         fzf
@@ -96,7 +93,7 @@ in
         appimage-run
         lsd
         lshw
-	bc
+        bc
 
         # GNOME
         nautilus
@@ -112,10 +109,8 @@ in
         lenovo-legion
 
         # Nix Related
-        nixfmt-rfc-style
+        nixfmt
         nix-output-monitor
-        nvd
-        nixd
         nurl
         nix-prefetch-git
       ];

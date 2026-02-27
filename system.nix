@@ -12,7 +12,7 @@
 
   networking.hostName = "nixos";
   networking.networkmanager.enable = true;
-  
+
   networking.firewall = {
     enable = true;
     allowedTCPPorts = [
@@ -20,7 +20,7 @@
     ];
     trustedInterfaces = [ "tailscale0" ];
     allowedUDPPorts = [ 41641 ];
-  }; 
+  };
 
   hardware.bluetooth = {
     enable = true;
@@ -45,18 +45,14 @@
   programs.hyprland = {
     enable = true;
   };
-  
+
   services.displayManager.gdm = {
     enable = true;
     wayland = true;
   };
 
   environment.systemPackages = with pkgs; [
-    inputs.caelestia-shell.packages."x86_64-linux".with-cli
-    inputs.caelestia-cli.packages."x86_64-linux".default
-    #quickshell
     ddcutil
-    brightnessctl
     app2unit
     libcava
     networkmanager
@@ -69,7 +65,6 @@
     hyprpicker
     cliphist
     trash-cli
-    foot
     fastfetch
     starship
     btop
@@ -83,8 +78,11 @@
     wl-clipboard
     seahorse
     adwaita-icon-theme
+    noto-fonts-cjk-sans
+
+    kdePackages.plasma-systemmonitor
   ];
-  
+
   fonts.packages = with pkgs; [
     rubik
     nerd-fonts.ubuntu
@@ -93,6 +91,7 @@
     font-awesome
     material-symbols
     material-design-icons
+    noto-fonts-cjk-sans
     noto-fonts
     noto-fonts-color-emoji
   ];
@@ -104,7 +103,7 @@
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
-  ]; 
+  ];
 
   nixpkgs.config.allowUnfree = true;
 
@@ -128,7 +127,6 @@
 
   console.keyMap = "trq";
 
-
   # --------------------------
   # Miscellaneous
   # --------------------------
@@ -136,7 +134,7 @@
   security = {
     rtkit.enable = true;
     polkit.enable = true;
-  }; 
+  };
 
   documentation.nixos.enable = false;
 
