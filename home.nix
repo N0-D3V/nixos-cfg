@@ -24,6 +24,101 @@
     #bluez
   ];
 
+  # ----------------------
+  # Neovim
+  # ----------------------
+  programs.neovim = {
+    enable = true;
+    defaultEditor = true;
+    viAlias = true;
+    vimAlias = true;
+
+    plugins = with pkgs.vimPlugins; [
+      catppuccin-nvim
+      lualine-nvim
+      nvim-web-devicons
+      telescope-nvim
+      plenary-nvim
+      gitsigns-nvim
+      mini-pairs
+      nvim-colorizer-lua
+    ];
+
+    extraLuaConfig = ''
+      --------------------------------------------------
+      -- BASIC SETTINGS
+      --------------------------------------------------
+      vim.opt.number = true
+      vim.opt.relativenumber = true
+      vim.opt.cursorline = true
+      vim.opt.termguicolors = true
+      vim.opt.signcolumn = "yes"
+      vim.opt.expandtab = true
+      vim.opt.shiftwidth = 2
+      vim.opt.tabstop = 2
+      vim.opt.smartindent = true
+      vim.opt.scrolloff = 8
+      vim.g.mapleader = " "
+
+      --------------------------------------------------
+      -- THEME
+      --------------------------------------------------
+      require("catppuccin").setup({
+        flavour = "mocha",
+        transparent_background = true,
+      })
+      vim.cmd.colorscheme("catppuccin")
+
+      --------------------------------------------------
+      -- LUALINE
+      --------------------------------------------------
+      require("lualine").setup({
+        options = {
+          theme = "catppuccin",
+          section_separators = "",
+          component_separators = "",
+        }
+      })
+
+      --------------------------------------------------
+      -- GITSIGNS
+      --------------------------------------------------
+      require("gitsigns").setup()
+
+      --------------------------------------------------
+      -- MINI PAIRS
+      --------------------------------------------------
+      require("mini.pairs").setup()
+
+      --------------------------------------------------
+      -- TELESCOPE
+      --------------------------------------------------
+      local builtin = require("telescope.builtin")
+      vim.keymap.set("n", "<leader>ff", builtin.find_files)
+      vim.keymap.set("n", "<leader>fg", builtin.live_grep)
+      vim.keymap.set("n", "<leader>fb", builtin.buffers)
+
+      --------------------------------------------------
+      -- KEYMAPS
+      --------------------------------------------------
+      vim.keymap.set("n", "<leader>w", ":w<CR>")
+      vim.keymap.set("n", "<leader>q", ":q<CR>")
+      vim.keymap.set("n", "<leader>h", ":nohlsearch<CR>")
+
+      -- Colorizer config
+      require("colorizer").setup({
+        "*"; -- tüm dosya tiplerinde çalışsın
+      }, {
+        RGB      = true,
+        RRGGBB   = true,
+        names    = false,
+        tailwind = false,
+        mode     = "background",
+      })
+
+    '';
+  };
+
   home.sessionVariables = {
     QML2_IMPORT_PATH = "$HOME/.nix-profile/lib/qt-6/qml";
   };
@@ -32,7 +127,7 @@
   xdg.configFile."kitty-custom.conf".text = lib.mkAfter ''
     background_opacity 0.97 
   '';
- 
+
   xdg.configFile."hypr/custom/monitors.conf".text = ''
     monitor=,2560x1600@144,auto,1.25
     misc {

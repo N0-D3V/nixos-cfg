@@ -184,14 +184,14 @@ in
       # "kdeglobals".source = "${dotfilesSource}/dots/.config/kdeglobals";
 
       "kde-material-you-colors".source = "${dotfilesSource}/dots/.config/kde-material-you-colors";
-      "kitty".source = pkgs.runCommand "kitty-patched" {} ''
-        cp -r ${dotfilesSource}/dots/.config/kitty $out
-        chmod -R +w $out
-        echo "" >> $out/kitty.conf
-	echo "allow_remote_control yes" >> $out/kitty.conf
-        echo "include ~/.local/state/quickshell/user/generated/terminal/kitty-colors.conf" >> $out/kitty.conf
-	echo "include ~/.config/kitty-custom.conf" >> $out/kitty.conf
-        echo "listen_on unix:/tmp/kitty" >> $out/kitty.conf
+      "kitty".source = pkgs.runCommand "kitty-patched" { } ''
+                cp -r ${dotfilesSource}/dots/.config/kitty $out
+                chmod -R +w $out
+                echo "" >> $out/kitty.conf
+        	echo "allow_remote_control yes" >> $out/kitty.conf
+                echo "include ~/.local/state/quickshell/user/generated/terminal/kitty-colors.conf" >> $out/kitty.conf
+        	echo "include ~/.config/kitty-custom.conf" >> $out/kitty.conf
+                echo "listen_on unix:/tmp/kitty" >> $out/kitty.conf
       '';
       "konsolerc".source = "${dotfilesSource}/dots/.config/konsolerc";
       "Kvantum".source = "${dotfilesSource}/dots/.config/Kvantum";
@@ -200,46 +200,46 @@ in
 
       # Patch QuickShell scripts to fix shebangs (e.g., #!/bin/bash -> #!/nix/store/.../bash)
       "quickshell".source =
-        let 
+        let
           qsToKitty = pkgs.writeShellScript "qs-to-kitty.sh" ''
-    SRC="$HOME/.local/state/quickshell/user/generated/colors.json"
-    OUT="$HOME/.local/state/quickshell/user/generated/terminal/kitty-colors.conf"
-    
-    mkdir -p "$(dirname "$OUT")"
+                SRC="$HOME/.local/state/quickshell/user/generated/colors.json"
+                OUT="$HOME/.local/state/quickshell/user/generated/terminal/kitty-colors.conf"
+                
+                mkdir -p "$(dirname "$OUT")"
 
-    jq -r '
-      "background " + .background,
-      "foreground " + .on_background,
-      "selection_background " + .surface_container_high,
-      "selection_foreground " + .on_surface,
-      "cursor " + .primary,
-      "cursor_text_color " + .background,
+                jq -r '
+                  "background " + .background,
+                  "foreground " + .on_background,
+                  "selection_background " + .surface_container_high,
+                  "selection_foreground " + .on_surface,
+                  "cursor " + .primary,
+                  "cursor_text_color " + .background,
 
-      "color0 "  + .surface_container_lowest,
-      "color1 "  + .error,
-      "color2 "  + .primary,
-      "color3 "  + .tertiary,
-      "color4 "  + .primary_fixed_dim,
-      "color5 "  + .secondary,
-      "color6 "  + .tertiary,
-      "color7 "  + .on_surface,
+                  "color0 "  + .surface_container_lowest,
+                  "color1 "  + .error,
+                  "color2 "  + .primary,
+                  "color3 "  + .tertiary,
+                  "color4 "  + .primary_fixed_dim,
+                  "color5 "  + .secondary,
+                  "color6 "  + .tertiary,
+                  "color7 "  + .on_surface,
 
-      "color8 "  + .outline,
-      "color9 "  + .error_container,
-      "color10 " + .primary_container,
-      "color11 " + .tertiary_container,
-      "color12 " + .primary,
-      "color13 " + .secondary_container,
-      "color14 " + .tertiary_container,
-      "color15 " + .inverse_on_surface
-    ' "$SRC" > "$OUT"
+                  "color8 "  + .outline,
+                  "color9 "  + .error_container,
+                  "color10 " + .primary_container,
+                  "color11 " + .tertiary_container,
+                  "color12 " + .primary,
+                  "color13 " + .secondary_container,
+                  "color14 " + .tertiary_container,
+                  "color15 " + .inverse_on_surface
+                ' "$SRC" > "$OUT"
 
-    for socket in /tmp/kitty /tmp/mykitty; do
-    [ -S "$socket" ] && kitty @ --to "unix:$socket" set-colors --all "$OUT" 2>/dev/null || true
-done
+                for socket in /tmp/kitty /tmp/mykitty; do
+                [ -S "$socket" ] && kitty @ --to "unix:$socket" set-colors --all "$OUT" 2>/dev/null || true
+            done
           '';
 
-	in
+        in
         pkgs.runCommand "quickshell-patched"
           {
             buildInputs = [
@@ -248,25 +248,25 @@ done
             ];
           }
           ''
-            cp -r ${dotfilesSource}/dots/.config/quickshell $out
-            chmod -R +w $out
+                        cp -r ${dotfilesSource}/dots/.config/quickshell $out
+                        chmod -R +w $out
 
-            # Replace complex shebangs that patchShebangs can't handle with standard python
-            # The complex shebang tried to source a venv, but we provide pythonEnv directly via Nix
-            find $out -name "*.py" -print0 | xargs -0 sed -i 's|^#!.*ILLOGICAL_IMPULSE_VIRTUAL_ENV.*|#!/usr/bin/env python3|'
+                        # Replace complex shebangs that patchShebangs can't handle with standard python
+                        # The complex shebang tried to source a venv, but we provide pythonEnv directly via Nix
+                        find $out -name "*.py" -print0 | xargs -0 sed -i 's|^#!.*ILLOGICAL_IMPULSE_VIRTUAL_ENV.*|#!/usr/bin/env python3|'
 
-            # Suppress permission errors when writing to /dev/pts in applycolor.sh
-            sed -i 's|/dev/pts/\*|/dev/pts/* 2>/dev/null|' $out/ii/scripts/colors/applycolor.sh
+                        # Suppress permission errors when writing to /dev/pts in applycolor.sh
+                        sed -i 's|/dev/pts/\*|/dev/pts/* 2>/dev/null|' $out/ii/scripts/colors/applycolor.sh
 
-	    # Inject qs-to-kitty.sh call into post_process in switchwall.sh
-            sed -i 's|"\$SCRIPT_DIR/code/material-code-set-color.sh" &|\0\n    "\$SCRIPT_DIR/qs-to-kitty.sh" \&|' \
-              $out/ii/scripts/colors/switchwall.sh
+            	    # Inject qs-to-kitty.sh call into post_process in switchwall.sh
+                        sed -i 's|"\$SCRIPT_DIR/code/material-code-set-color.sh" &|\0\n    "\$SCRIPT_DIR/qs-to-kitty.sh" \&|' \
+                          $out/ii/scripts/colors/switchwall.sh
 
-            # Copy kitty script over to scripts directory
-	    cp ${qsToKitty} $out/ii/scripts/colors/qs-to-kitty.sh
-chmod +x $out/ii/scripts/colors/qs-to-kitty.sh
+                        # Copy kitty script over to scripts directory
+            	    cp ${qsToKitty} $out/ii/scripts/colors/qs-to-kitty.sh
+            chmod +x $out/ii/scripts/colors/qs-to-kitty.sh
 
-            patchShebangs $out
+                        patchShebangs $out
           '';
 
       "starship.toml".source = "${dotfilesSource}/dots/.config/starship.toml";
