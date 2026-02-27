@@ -46,9 +46,14 @@
     enable = true;
   };
 
-  services.displayManager.gdm = {
+  services.greetd = {
     enable = true;
-    wayland = true;
+    settings = {
+      default_session = {
+        command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --remember --cmd start-hyprland";
+        user = "nodev";
+      };
+    };
   };
 
   environment.systemPackages = with pkgs; [

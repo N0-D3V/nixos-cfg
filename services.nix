@@ -15,6 +15,10 @@
     udev.extraRules = ''
       SUBSYSTEM=="backlight", KERNEL=="intel_backlight", TAG+="systemd", ENV{PREFERRED}="1"
     '';
+    gnome = {
+      gnome-keyring.enable = true;
+    };
   };
-
+  
+  security.pam.services.login.enableGnomeKeyring = true;
 }

@@ -36,8 +36,8 @@
   xdg.configFile."hypr/custom/monitors.conf".text = ''
     monitor=,2560x1600@144,auto,1.25
     misc {
-      vfr = 0
-      vrr = 0
+      vfr = 1
+      vrr = 1
     }
     xwayland {
       force_zero_scaling = true
@@ -47,6 +47,11 @@
 
   xdg.configFile."hypr/custom/environment.conf".text = ''
     env = QSG_RENDER_LOOP,threaded
+    env = __NV_PRIME_RENDER_OFFLOAD,0
+    env = __GLX_VENDOR_LIBRARY_NAME,nvidia
+    env = LIBVA_DRIVER_NAME,nvidia
+    env = NVD_BACKEND,direct
+
     env = TERMINAL,kitty --listen-on unix:/tmp/kitty --config ${config.xdg.configHome}/kitty/kitty.conf -1
     env = KITTY_CONFIG_DIRECTORY,${config.xdg.configHome}/kitty
   '';
