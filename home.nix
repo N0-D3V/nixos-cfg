@@ -22,6 +22,7 @@
     adwaita-icon-theme
     noto-fonts-cjk-sans
     #bluez
+    bibata-cursors
   ];
 
   # ----------------------
@@ -123,7 +124,9 @@
     QML2_IMPORT_PATH = "$HOME/.nix-profile/lib/qt-6/qml";
   };
 
-  # Overrides to End4 dots
+  # ----------------------
+  # Hyprland
+  # ----------------------
   xdg.configFile."kitty-custom.conf".text = lib.mkAfter ''
     background_opacity 0.97 
   '';
@@ -141,14 +144,19 @@
   '';
 
   xdg.configFile."hypr/custom/environment.conf".text = ''
-    env = QSG_RENDER_LOOP,threaded
-    env = __NV_PRIME_RENDER_OFFLOAD,0
-    env = __GLX_VENDOR_LIBRARY_NAME,nvidia
-    env = LIBVA_DRIVER_NAME,nvidia
-    env = NVD_BACKEND,direct
+        env = QSG_RENDER_LOOP,threaded
+        env = __NV_PRIME_RENDER_OFFLOAD,0
+        env = __GLX_VENDOR_LIBRARY_NAME,nvidia
+        env = LIBVA_DRIVER_NAME,nvidia
+        env = NVD_BACKEND,direct
 
-    env = TERMINAL,kitty --listen-on unix:/tmp/kitty --config ${config.xdg.configHome}/kitty/kitty.conf -1
-    env = KITTY_CONFIG_DIRECTORY,${config.xdg.configHome}/kitty
+        env = HYPRCURSOR_THEME,Bibata-Modern-Ice
+    env = HYPRCURSOR_SIZE,24
+    env = XCURSOR_THEME,Bibata-Modern-Ice
+    env = XCURSOR_SIZE,24
+
+        env = TERMINAL,kitty --listen-on unix:/tmp/kitty --config ${config.xdg.configHome}/kitty/kitty.conf -1
+        env = KITTY_CONFIG_DIRECTORY,${config.xdg.configHome}/kitty
   '';
 
   xdg.configFile."hypr/custom/windowrules.conf".text = ''
@@ -161,24 +169,52 @@
       }
     }
 
-    # First override II's global no_blur for kitty
+    # First override II's global no_blur
     windowrule = no_blur off, match:class kitty
+    windowrule = no_blur off, match:class Spotify
 
-    # Set opacity so blur shows through  
     windowrule = opacity 0.97 override 0.97 override, match:class kitty
+    windowrule = opacity 0.93 override 0.93 override, match:class Spotify
   '';
 
   xdg.configFile."hypr/hyprland.conf".text = lib.mkAfter ''
     source = custom/monitors.conf
     source = custom/windowrules.conf
     source = custom/environment.conf
+
+    input {
+      kb_layout = us,tr
+      kb_options = grp:win_space_toggle
+    }
   '';
 
   gtk.iconTheme.name = "Papirus";
 
+  home.pointerCursor = {
+    gtk.enable = true;
+    x11.enable = true;
+    name = "Bibata-Modern-Classic";
+    size = 24;
+    package = pkgs.bibata-cursors;
+  };
+
+  # Set dconf for GTK apps that don't respect the above
+  dconf.settings = {
+    "org/gnome/desktop/interface" = {
+      cursor-theme = "Bibata-Modern-Classic";
+      cursor-size = 24;
+    };
+  };
+
   # --------------------------
   # Code
   # --------------------------
+
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
+
   programs.vscode = {
     enable = true;
     package = pkgs.vscode.fhs;
