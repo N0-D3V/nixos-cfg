@@ -21,13 +21,21 @@
     papirus-icon-theme
     adwaita-icon-theme
     noto-fonts-cjk-sans
-    #bluez
+    bluez
     bibata-cursors
   ];
+
 
   # ----------------------
   # Neovim
   # ----------------------
+
+  programs.zoxide = {
+      enable = true;
+      enableFishIntegration = true;
+  };
+
+
   programs.neovim = {
     enable = true;
     defaultEditor = true;
@@ -132,7 +140,7 @@
   '';
 
   xdg.configFile."hypr/custom/monitors.conf".text = ''
-    monitor=,2560x1600@144,auto,1.25
+    monitor=,2560x1600@240,auto,1
     misc {
       vfr = 1
       vrr = 1
@@ -151,9 +159,9 @@
         env = NVD_BACKEND,direct
 
         env = HYPRCURSOR_THEME,Bibata-Modern-Ice
-    env = HYPRCURSOR_SIZE,24
-    env = XCURSOR_THEME,Bibata-Modern-Ice
-    env = XCURSOR_SIZE,24
+        env = HYPRCURSOR_SIZE,24
+        env = XCURSOR_THEME,Bibata-Modern-Ice
+        env = XCURSOR_SIZE,24
 
         env = TERMINAL,kitty --listen-on unix:/tmp/kitty --config ${config.xdg.configHome}/kitty/kitty.conf -1
         env = KITTY_CONFIG_DIRECTORY,${config.xdg.configHome}/kitty

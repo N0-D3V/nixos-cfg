@@ -11,6 +11,8 @@ in
     vimAlias = true;
   };
 
+  programs.seahorse.enable = true;
+
   programs.fish = {
     enable = true;
   };
@@ -69,6 +71,12 @@ in
         qbittorrent
         jellyfin-desktop
         #mpv
+        bat
+        fd
+        fzf
+        jq
+        rg
+
 
         # CLI
         fastfetch
@@ -80,11 +88,7 @@ in
 
         # Tools
         mangohud
-        bat
-        fd
-        fzf
         socat
-        jq
         acpi
         ffmpeg
         libnotify
@@ -118,6 +122,7 @@ in
 
         # Development
         uv
+        gemini-cli
       ];
   };
   nix.settings = {

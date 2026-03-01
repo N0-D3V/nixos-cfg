@@ -22,6 +22,11 @@
     allowedUDPPorts = [ 41641 ];
   };
 
+  services.resolved = {
+    enable = true;
+    dnssec = "true";
+  };
+
   hardware.bluetooth = {
     enable = true;
     powerOnBoot = true;
@@ -37,6 +42,7 @@
     alsa.support32Bit = true;
     pulse.enable = true;
     wireplumber.enable = true;
+    jack.enable = true;
   };
 
   # ---------------------------
@@ -80,12 +86,9 @@
     libsForQt5.qt5ct
     kdePackages.qt6ct
     libsForQt5.qt5.qtpositioning
-    wl-clipboard
-    seahorse
+    wl-clipboard 
     adwaita-icon-theme
     noto-fonts-cjk-sans
-
-    kdePackages.plasma-systemmonitor
   ];
 
   fonts.packages = with pkgs; [

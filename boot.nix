@@ -28,6 +28,8 @@
     kernelModules = [
       "i2c-dev"
       "i2c-i801"
+      "bluetooth" # Trying to fix bluetooth softblocked issue
+      "btusb"
     ];
 
     plymouth = {

@@ -10,14 +10,14 @@
     upower.enable = true;
     power-profiles-daemon.enable = true;
     thermald.enable = true;
-    blueman.enable = true;
+    #blueman.enable = true;
     dbus.enable = true;
-    udev.extraRules = ''
-      SUBSYSTEM=="backlight", KERNEL=="intel_backlight", TAG+="systemd", ENV{PREFERRED}="1"
-    '';
+    udisks2.enable = true;
     gnome = {
       gnome-keyring.enable = true;
     };
+    gvfs.enable = true;
+    tumbler.enable = true;
   };
 
   security.pam.services.login.enableGnomeKeyring = true;
