@@ -23,18 +23,36 @@
     noto-fonts-cjk-sans
     bluez
     bibata-cursors
+
+    gemini-cli
+
+    (pkgs.writeShellScriptBin "vpn-toggle" ''
+      if systemctl is-active --quiet openvpn-airvpn; then
+        systemctl stop openvpn-airvpn && notify-send "VPN Disconnected"
+      else
+        systemctl start openvpn-airvpn
+        sleep 1
+        if systemctl is-active --quiet openvpn-airvpn; then
+          notify-send "VPN Connected"
+        else
+          notify-send "VPN Failed to Connect"
+        fi
+      fi
+    '')
   ];
 
+  programs.fish.shellAliases = {
+    af = "anifetch -r 12 -C ~/Videos/AniFetch/*";
+  };
 
   # ----------------------
   # Neovim
   # ----------------------
 
   programs.zoxide = {
-      enable = true;
-      enableFishIntegration = true;
+    enable = true;
+    enableFishIntegration = true;
   };
-
 
   programs.neovim = {
     enable = true;
@@ -51,9 +69,11 @@
       gitsigns-nvim
       mini-pairs
       nvim-colorizer-lua
+
+      leetcode-nvim
     ];
 
-    extraLuaConfig = ''
+    initLua = ''
       --------------------------------------------------
       -- BASIC SETTINGS
       --------------------------------------------------
@@ -108,6 +128,11 @@
       vim.keymap.set("n", "<leader>fb", builtin.buffers)
 
       --------------------------------------------------
+      -- LEETCODE 
+      --------------------------------------------------
+      require("leetcode").setup()
+
+      --------------------------------------------------
       -- KEYMAPS
       --------------------------------------------------
       vim.keymap.set("n", "<leader>w", ":w<CR>")
@@ -135,36 +160,152 @@
   # ----------------------
   # Hyprland
   # ----------------------
+  xdg.configFile."fastfetch/config.jsonc".text = ''
+    {
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    "logo": {
+      "source": "\"$(fastfetch.sh logo)\"",
+      "height": 18
+    },
+    "display": {
+      "separator": " : "
+    },
+    "modules": [
+      {
+        "type": "custom",
+        "format": "┌──────────────────────────────────────────┐"
+      },
+      {
+        "type": "chassis",
+        "key": "  󰇺 Chassis",
+        "format": "{1} {2} {3}"
+      },
+      {
+        "type": "os",
+        "key": "   OS",
+        "format": "{2}",
+        "keyColor": "red"
+      },
+      {
+        "type": "kernel",
+        "key": "   Kernel",
+        "format": "{2}",
+        "keyColor": "red"
+      },
+      {
+        "type": "packages",
+        "key": "  󰏗 Packages",
+        "keyColor": "green"
+      },
+      {
+        "type": "display",
+        "key": "  󰍹 Display",
+        "format": "{1}x{2} @ {3}Hz [{7}]",
+        "keyColor": "green"
+      },
+      {
+        "type": "terminal",
+        "key": "   Terminal",
+        "keyColor": "yellow"
+      },
+      {
+        "type": "wm",
+        "key": "  󱗃 WM",
+        "format": "{2}",
+        "keyColor": "yellow"
+      },
+      {
+        "type": "custom",
+        "format": "└──────────────────────────────────────────┘"
+      },
+      "break",
+      {
+        "type": "title",
+        "key": "  ",
+        "format": "{6} {7} {8}"
+      },
+      {
+        "type": "custom",
+        "format": "┌──────────────────────────────────────────┐"
+      },
+      {
+        "type": "cpu",
+        "format": "{1} @ {7}",
+        "key": "   CPU",
+        "keyColor": "blue"
+      },
+      {
+        "type": "gpu",
+        "format": "{1} {2}",
+        "key": "  󰊴 GPU",
+        "keyColor": "blue"
+      },
+      {
+        "type": "gpu",
+        "format": "{3}",
+        "key": "   GPU Driver",
+        "keyColor": "magenta"
+      },
+      {
+        "type": "memory",
+        "key": "   Memory ",
+        "keyColor": "magenta"
+      },
+      {
+        "type": "disk",
+        "key": "  󱦟 OS Age ",
+        "folders": "/",
+        "keyColor": "red",
+        "format": "{days} days"
+      },
+      {
+        "type": "uptime",
+        "key": "  󱫐 Uptime ",
+        "keyColor": "red"
+      },
+      {
+        "type": "custom",
+        "format": "└──────────────────────────────────────────┘"
+      },
+      {
+        "type": "colors",
+        "paddingLeft": 2,
+        "symbol": "circle"
+      },
+      "break"
+    ]
+    }
+  '';
+
   xdg.configFile."kitty-custom.conf".text = lib.mkAfter ''
     background_opacity 0.97 
   '';
 
   xdg.configFile."hypr/custom/monitors.conf".text = ''
-    monitor=,2560x1600@240,auto,1
+    monitor=,2560x1600@240,auto,1.25
     misc {
-      vfr = 1
-      vrr = 1
+      vfr = 0
+      vrr = 0
     }
     xwayland {
       force_zero_scaling = true
     }
-
   '';
 
   xdg.configFile."hypr/custom/environment.conf".text = ''
-        env = QSG_RENDER_LOOP,threaded
-        env = __NV_PRIME_RENDER_OFFLOAD,0
-        env = __GLX_VENDOR_LIBRARY_NAME,nvidia
-        env = LIBVA_DRIVER_NAME,nvidia
-        env = NVD_BACKEND,direct
+    env = QSG_RENDER_LOOP,threaded
+    env = __NV_PRIME_RENDER_OFFLOAD,0
+    env = __GLX_VENDOR_LIBRARY_NAME,nvidia
+    env = LIBVA_DRIVER_NAME,nvidia
+    env = NVD_BACKEND,direct
 
-        env = HYPRCURSOR_THEME,Bibata-Modern-Ice
-        env = HYPRCURSOR_SIZE,24
-        env = XCURSOR_THEME,Bibata-Modern-Ice
-        env = XCURSOR_SIZE,24
+    env = HYPRCURSOR_THEME,Bibata-Modern-Ice
+    env = HYPRCURSOR_SIZE,24
+    env = XCURSOR_THEME,Bibata-Modern-Ice
+    env = XCURSOR_SIZE,24
 
-        env = TERMINAL,kitty --listen-on unix:/tmp/kitty --config ${config.xdg.configHome}/kitty/kitty.conf -1
-        env = KITTY_CONFIG_DIRECTORY,${config.xdg.configHome}/kitty
+    env = TERMINAL,kitty --listen-on unix:/tmp/kitty --config ${config.xdg.configHome}/kitty/kitty.conf -1
+    env = KITTY_CONFIG_DIRECTORY,${config.xdg.configHome}/kitty
   '';
 
   xdg.configFile."hypr/custom/windowrules.conf".text = ''
@@ -183,17 +324,25 @@
 
     windowrule = opacity 0.97 override 0.97 override, match:class kitty
     windowrule = opacity 0.93 override 0.93 override, match:class Spotify
+
+    layerrule {
+      name = overview
+      animation = fadeIn
+      match:namespace = quickshell:overview
+    }
   '';
 
   xdg.configFile."hypr/hyprland.conf".text = lib.mkAfter ''
-    source = custom/monitors.conf
-    source = custom/windowrules.conf
-    source = custom/environment.conf
+     source = custom/monitors.conf
+     source = custom/windowrules.conf
+     source = custom/environment.conf
 
-    input {
-      kb_layout = us,tr
-      kb_options = grp:win_space_toggle
-    }
+     input {
+       kb_layout = us,tr
+       kb_options = grp:win_space_toggle
+     } 
+
+    bind = Super+Shift, V, exec, vpn-toggle
   '';
 
   gtk.iconTheme.name = "Papirus";

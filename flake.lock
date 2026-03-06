@@ -1,5 +1,25 @@
 {
   "nodes": {
+    "anifetch": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1771420924,
+        "narHash": "sha256-ex7M7JZkfsZ78tn93jI7FM/33fuOQuKZioWuPaij7dE=",
+        "owner": "Notenlish",
+        "repo": "anifetch",
+        "rev": "3cee80cacd9259520a6b953433de306240a06cfb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Notenlish",
+        "repo": "anifetch",
+        "type": "github"
+      }
+    },
     "dotfiles": {
       "flake": false,
       "locked": {
@@ -209,6 +229,7 @@
     },
     "root": {
       "inputs": {
+        "anifetch": "anifetch",
         "home-manager": "home-manager",
         "illogical-flake": "illogical-flake",
         "nixos-hardware": "nixos-hardware",

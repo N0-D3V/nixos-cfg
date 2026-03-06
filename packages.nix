@@ -60,23 +60,22 @@ in
         rnote
         zoom-us
         ente-auth
-        proton-pass
         foliate
         discord
         signal-desktop
         github-desktop
         pavucontrol
         gitkraken
-        eddie
         qbittorrent
         jellyfin-desktop
+        bitwarden-desktop
+        papers
         #mpv
         bat
         fd
         fzf
         jq
-        rg
-
+        ripgrep
 
         # CLI
         fastfetch
@@ -85,6 +84,7 @@ in
         imagemagick
         playerctl
         wmctrl
+        anifetch # overlay of a nix flake
 
         # Tools
         mangohud
@@ -112,8 +112,6 @@ in
         gnome-sound-recorder
         n8n
 
-        lenovo-legion
-
         # Nix Related
         nixfmt
         nix-output-monitor
@@ -122,7 +120,6 @@ in
 
         # Development
         uv
-        gemini-cli
       ];
   };
   nix.settings = {

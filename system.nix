@@ -11,7 +11,32 @@
   # ----------------------------
 
   networking.hostName = "nixos";
-  networking.networkmanager.enable = true;
+  networking.networkmanager = {
+    enable = true;
+    plugins = [
+      pkgs.networkmanager-openvpn
+    ];
+  };
+
+  services.openvpn.servers = {
+    airvpn = {
+      config = "config ${./vpn/airvpn.ovpn}";
+      autoStart = false;
+    };
+  };
+
+  #security.polkit.extraConfig = ''
+  #  polkit.addRule(function(action, subject) {
+  #    if (
+  #      action.id == "org.freedesktop.systemd1.manage-units" &&
+  #      action.lookup("unit") == "openvpn-airvpn.service" &&
+  #      subject.user == "nodev"
+  #    ) {
+  #      return polkit.Result.YES;
+  #    }
+  #  });
+  #'';
+  # Add back in if you want no authenticator for vpn keybind
 
   networking.firewall = {
     enable = true;
@@ -52,6 +77,9 @@
     enable = true;
   };
 
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  services.xserver.videoDrivers = [ "nvidia" ];
+
   services.greetd = {
     enable = true;
     settings = {
@@ -86,7 +114,7 @@
     libsForQt5.qt5ct
     kdePackages.qt6ct
     libsForQt5.qt5.qtpositioning
-    wl-clipboard 
+    wl-clipboard
     adwaita-icon-theme
     noto-fonts-cjk-sans
   ];

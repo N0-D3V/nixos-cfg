@@ -16,6 +16,11 @@
       url = "path:flakes/illogical-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    anifetch = {
+      url = "github:Notenlish/anifetch";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -25,11 +30,18 @@
       illogical-flake,
       ...
     }@inputs:
+    let
+      system = "x86_64-linux";
+    in
     {
       nixosConfigurations."nixos" = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
+        inherit system;
         specialArgs = { inherit inputs; };
         modules = [
+          (import ./overlay.nix {
+            inherit inputs system;
+          })
+
           ./packages.nix
           ./services.nix
           ./system.nix
