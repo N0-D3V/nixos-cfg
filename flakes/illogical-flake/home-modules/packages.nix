@@ -13,6 +13,13 @@ let
   # Custom packages
   customPkgs = import ../pkgs { inherit pkgs; };
 
+  # matugen 4.x prompts interactively when a TTY is present and crashes with
+  # ENOTTY when called without one (e.g. from quickshell's Process{}).
+  # --source-color-index 0 skips the interactive picker and auto-selects.
+  matugenWrapped = pkgs.writeShellScriptBin "matugen" ''
+    exec ${pkgs.matugen}/bin/matugen "$@" --source-color-index 0
+  '';
+
   # Python environment for quickshell wallpaper analysis
   pythonEnv = pkgs.python3.withPackages (ps: [
     ps.build
@@ -73,7 +80,7 @@ in
         # GUI applications
         foot
         fuzzel
-        matugen
+        matugenWrapped
         mpv
         mpvpaper
         swappy

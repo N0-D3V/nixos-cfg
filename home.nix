@@ -20,7 +20,6 @@
     kdePackages.qtdeclarative
     papirus-icon-theme
     adwaita-icon-theme
-    noto-fonts-cjk-sans
     bluez
     bibata-cursors
 
@@ -43,6 +42,7 @@
 
   programs.fish.shellAliases = {
     af = "anifetch -r 12 -C ~/Videos/AniFetch/*";
+    ssh = "kitten ssh";
   };
 
   # ----------------------
@@ -69,6 +69,7 @@
       gitsigns-nvim
       mini-pairs
       nvim-colorizer-lua
+      vimtex
 
       leetcode-nvim
     ];
@@ -150,6 +151,10 @@
         mode     = "background",
       })
 
+    '';
+    extraConfig = ''
+      let g:vimtex_view_method = 'zathura'
+      let g:vimtex_compiler_method = 'latexmk'
     '';
   };
 
@@ -278,14 +283,20 @@
   '';
 
   xdg.configFile."kitty-custom.conf".text = lib.mkAfter ''
-    background_opacity 0.97 
+    background_opacity 0.97
+    input_delay 0
+    repaint_delay 2
+    sync_to_monitor no
+    wayland_enable_ime no
   '';
 
   xdg.configFile."hypr/custom/monitors.conf".text = ''
-    monitor=,2560x1600@240,auto,1.25
+    monitor=,2560x1600@240,auto,1
+    #monitor=HDMI-A-1,1920x1080@60,auto,1
     misc {
       vfr = 0
       vrr = 0
+      background_color = rgba(131519ff) # default bg color behind transparent stuff
     }
     xwayland {
       force_zero_scaling = true
@@ -304,11 +315,41 @@
     env = XCURSOR_THEME,Bibata-Modern-Ice
     env = XCURSOR_SIZE,24
 
-    env = TERMINAL,kitty --listen-on unix:/tmp/kitty --config ${config.xdg.configHome}/kitty/kitty.conf -1
+    env = TERMINAL,kitty --listen-on unix:@kitty --config ${config.xdg.configHome}/kitty/kitty.conf -1
     env = KITTY_CONFIG_DIRECTORY,${config.xdg.configHome}/kitty
   '';
 
   xdg.configFile."hypr/custom/windowrules.conf".text = ''
+            # Override II's global no_blur
+            windowrule = no_blur off, match:class kitty
+            windowrule = no_blur off, match:class org.gnome.Nautilus
+            windowrule = no_blur off, match:class spotify
+            windowrule = no_blur off, match:title Claude
+            windowrule = no_blur off, match:class zen-beta
+            windowrule = no_blur off, match:class com.rtosta.zapzap
+
+            windowrule = opacity 0.97 override 0.97 override, match:class kitty
+            windowrule = opacity 0.93 override 0.93 override, match:class spotify
+            windowrule = opacity 0.93 override 0.93 override, match:class org.gnome.Nautilus
+            windowrule = opacity 0.97 override 0.97 override, match:title Claude
+            windowrule = opacity 0.97 override 0.97 override, match:class zen-beta
+            windowrule = opacity 0.95 override 0.95 override, match:class com.rtosta.zapzap
+
+            # --- Zen Browser auth/extension popups ---
+
+    # Bitwarden extension popup
+    windowrule = float on, match:title Extension:.*Bitwarden.*
+    windowrule = size 400 600, match:title Extension:.*Bitwarden.*
+    windowrule = center on, match:title Extension:.*Bitwarden.*
+
+    # Google account auth (passkey, sign-in, Turkish "Oturum açın", etc.)
+    windowrule = float on, match:title .*(passkey|Google Hesapları|Google Accounts|Oturum açın|Sign in).*
+    windowrule = size 500 650, match:title .*(passkey|Google Hesapları|Google Accounts|Oturum açın|Sign in).*
+    windowrule = center on, match:class zen-beta, match:title .*(passkey|Google Hesapları|Google Accounts|Oturum açın|Sign in).*
+
+  '';
+
+  xdg.configFile."hypr/hyprland.conf".text = lib.mkAfter ''
     decoration {
       blur {
         enabled = true
@@ -318,31 +359,33 @@
       }
     }
 
-    # First override II's global no_blur
-    windowrule = no_blur off, match:class kitty
-    windowrule = no_blur off, match:class Spotify
+    source = custom/monitors.conf
+    source = custom/windowrules.conf
+    source = custom/environment.conf
 
-    windowrule = opacity 0.97 override 0.97 override, match:class kitty
-    windowrule = opacity 0.93 override 0.93 override, match:class Spotify
-
-    layerrule {
-      name = overview
-      animation = fadeIn
-      match:namespace = quickshell:overview
+    input {
+      kb_layout = us,tr
+      kb_options = grp:win_space_toggle
+      touchpad {
+        disable_while_typing = false
+      }
     }
-  '';
-
-  xdg.configFile."hypr/hyprland.conf".text = lib.mkAfter ''
-     source = custom/monitors.conf
-     source = custom/windowrules.conf
-     source = custom/environment.conf
-
-     input {
-       kb_layout = us,tr
-       kb_options = grp:win_space_toggle
-     } 
 
     bind = Super+Shift, V, exec, vpn-toggle
+
+    exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP PATH XDG_DATA_DIRS
+    exec-once = gnome-keyring-daemon --start --components=secrets
+
+    hyprexpo-gesture = 3 ld expo
+
+    plugin {
+      hyprexpo {
+        columns = 3
+        gap_size = 5
+        bg_col = rgb(000000)
+        workspace_method = first 1
+      }
+    }
   '';
 
   gtk.iconTheme.name = "Papirus";

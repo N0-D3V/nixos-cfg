@@ -3,14 +3,6 @@ let
   spicePkgs = inputs.spicetify-nix.legacyPackages.${pkgs.stdenv.system};
 in
 {
-
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-    viAlias = true;
-    vimAlias = true;
-  };
-
   programs.seahorse.enable = true;
 
   programs.fish = {
@@ -35,11 +27,12 @@ in
   programs.spicetify = {
     enable = true;
     enabledExtensions = with spicePkgs.extensions; [
-      adblockify
+      adblock
       hidePodcasts
       shuffle
+      romajiConvert
     ];
-    theme = spicePkgs.themes.lucid;
+    theme = spicePkgs.themes.matte; # #lucid; Lucid got nuked somehow, check progress on #354 on Gerg-L spicetify every now and then :|
   };
 
   programs.nano.enable = false;
@@ -47,7 +40,6 @@ in
   environment = {
     systemPackages =
       with pkgs;
-      with nodePackages_latest;
       with libsForQt5;
       [
         # Daily use
@@ -68,23 +60,29 @@ in
         gitkraken
         qbittorrent
         jellyfin-desktop
-        bitwarden-desktop
+        #bitwarden-desktop apparently none of my apps work properly now, this uses an eol electron version, check back later
         papers
         #mpv
         bat
         fd
         fzf
-        jq
         ripgrep
+        claude-code
+        shadps4
+
+        prismlauncher
+
+        heroic
 
         # CLI
-        fastfetch
         cbonsai
         yt-dlp
         imagemagick
         playerctl
         wmctrl
         anifetch # overlay of a nix flake
+        toilet
+        lolcat
 
         # Tools
         mangohud
@@ -100,6 +98,8 @@ in
         lsd
         lshw
         bc
+        file
+        linuxPackages.cpupower
 
         # GNOME
         nautilus
@@ -110,6 +110,8 @@ in
         gnome-calculator
         gnome-clocks
         gnome-sound-recorder
+        snapshot
+
         n8n
 
         # Nix Related
@@ -131,12 +133,12 @@ in
     substituters = [
       "https://cache.nixos.org"
       "https://nix-community.cachix.org"
-      "https://cache.nixos-cuda.org"
+      "https://cuda-maintainers.cachix.org"
     ];
     trusted-public-keys = [
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      "cache.nixos-cuda.org-1:yqEmNDKJGPH5P1GcFdVZIEBWPNMpggFHt4PxCxjM+7k="
+      "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMCX6U4WylrUDZ9JyUG0VpVZa7CNfq5E="
     ];
 
   };

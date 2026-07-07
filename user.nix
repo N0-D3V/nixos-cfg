@@ -10,7 +10,7 @@
     name = "nodev";
     uid = 1000;
     isNormalUser = true;
-    password = null;
+    initialPassword = "changeme";
     extraGroups = [
       "networkmanager"
       "wheel"

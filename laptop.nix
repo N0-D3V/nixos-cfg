@@ -13,19 +13,19 @@
       proton-ge-bin
       libdrm
       protonup-ng
-      mangohud
+
     ];
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
     localNetworkGameTransfers.openFirewall = true;
     gamescopeSession = {
-      enable = true;
+      enable = false;
     };
   };
 
   programs.gamescope = {
-    enable = true;
-    capSysNice = true;
+    enable = false;
+    capSysNice = false;
   };
 
   programs.gamemode.enable = true;

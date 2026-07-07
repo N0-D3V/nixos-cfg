@@ -23,6 +23,39 @@ let
   # Custom packages
   customPkgs = import ../pkgs { inherit pkgs; };
   oneUIIconsPath = "${customPkgs.illogical-impulse-oneui4-icons}/share/icons";
+
+  # Fix overlay.floatingImage never rendering: ImageDownloaderProcess.qml used
+  # the `file` CLI to read image dimensions, but for JPEGs `file` prints JFIF
+  # density metadata (e.g. "density 1x1") *before* the real "WxH", so the
+  # QML regex matched "1x1" and the widget rendered at 1x1px. Patch it to use
+  # `magick identify` instead, which unambiguously reports pixel dimensions.
+  imageDownloaderFixScript =
+    let
+      quoted = name: "'\${" + name + "}'";
+      quotedWithFrame = name: "'\${" + name + "}[0]'";
+    in
+    pkgs.writeText "fix-image-downloader-dimensions.pl" ''
+      #!/usr/bin/env perl
+      use strict;
+      use warnings;
+
+      my $file = shift @ARGV;
+      open(my $fh, '<', $file) or die "Cannot read $file: $!";
+      my @lines = <$fh>;
+      close $fh;
+
+      for my $line (@lines) {
+          if ($line =~ /mkdir -p \$\(dirname/) {
+              $line = q{        `mkdir -p $(dirname ${quoted "processFilePath()"}); [ -f ${quoted "processFilePath()"} ] || curl -sSL ${quoted "sourceUrl"} -o ${quoted "processFilePath()"} && magick identify -format '%Wx%H' ${quotedWithFrame "processFilePath()"}`} . "\n";
+          } elsif ($line =~ /const match = output\.match/) {
+              $line = q{            const match = output.match(/^(\d+)x(\d+)/);} . "\n";
+          }
+      }
+
+      open(my $out, '>', $file) or die "Cannot write $file: $!";
+      print $out @lines;
+      close $out;
+    '';
 in
 {
   options.programs.illogical-impulse.dotfiles = {
@@ -151,16 +184,14 @@ in
       # Symlink other hyprland files individually
       "hypr/hyprland/colors.conf".source = "${dotfilesSource}/dots/.config/hypr/hyprland/colors.conf";
       "hypr/hyprland/execs.conf".source = "${dotfilesSource}/dots/.config/hypr/hyprland/execs.conf";
-      # Patch general.conf to remove obsolete hyprexpo options (enable_gesture, gesture_positive)
-      # These were removed from the hyprexpo plugin API and cause "Invalid value false for finger count" error
-      "hypr/hyprland/general.conf".text =
-        builtins.replaceStrings
-          [ "enable_gesture = false" "gesture_positive = false" ]
-          [
-            "# enable_gesture = false  # Removed: obsolete hyprexpo option"
-            "# gesture_positive = false  # Removed: obsolete hyprexpo option"
-          ]
-          (builtins.readFile "${dotfilesSource}/dots/.config/hypr/hyprland/general.conf");
+      # Strip obsolete hyprexpo plugin options that were removed from the API.
+      # Using sed avoids fragile exact-string matching (spacing/comment drift breaks replaceStrings).
+      "hypr/hyprland/general.conf".text = builtins.readFile (
+        pkgs.runCommand "hyprland-general-conf-filtered" { } ''
+          sed -E '/^[[:space:]]*(enable_gesture|gesture_positive|gesture_distance|gesture_fingers)[[:space:]]*=/d' \
+            ${dotfilesSource}/dots/.config/hypr/hyprland/general.conf > $out
+        ''
+      );
       "hypr/hyprland/keybinds.conf".source = "${dotfilesSource}/dots/.config/hypr/hyprland/keybinds.conf";
       "hypr/hyprland/rules.conf".source = "${dotfilesSource}/dots/.config/hypr/hyprland/rules.conf";
       "hypr/hyprland/scripts".source = "${dotfilesSource}/dots/.config/hypr/hyprland/scripts";
@@ -170,7 +201,12 @@ in
 
       # Symlink custom siblings
       "hypr/custom/execs.conf".source = "${dotfilesSource}/dots/.config/hypr/custom/execs.conf";
-      "hypr/custom/general.conf".source = "${dotfilesSource}/dots/.config/hypr/custom/general.conf";
+      "hypr/custom/general.conf".text = builtins.readFile (
+        pkgs.runCommand "hyprland-custom-general-conf-filtered" { } ''
+          sed -E '/^[[:space:]]*(enable_gesture|gesture_positive|gesture_distance|gesture_fingers)[[:space:]]*=/d' \
+            ${dotfilesSource}/dots/.config/hypr/custom/general.conf > $out
+        ''
+      );
       "hypr/custom/keybinds.conf".source = "${dotfilesSource}/dots/.config/hypr/custom/keybinds.conf";
       "hypr/custom/rules.conf".source = "${dotfilesSource}/dots/.config/hypr/custom/rules.conf";
       "hypr/custom/scripts".source = "${dotfilesSource}/dots/.config/hypr/custom/scripts";
@@ -191,7 +227,7 @@ in
         	echo "allow_remote_control yes" >> $out/kitty.conf
                 echo "include ~/.local/state/quickshell/user/generated/terminal/kitty-colors.conf" >> $out/kitty.conf
         	echo "include ~/.config/kitty-custom.conf" >> $out/kitty.conf
-                echo "listen_on unix:/tmp/kitty" >> $out/kitty.conf
+                echo "listen_on unix:@kitty" >> $out/kitty.conf
       '';
       "konsolerc".source = "${dotfilesSource}/dots/.config/konsolerc";
       "Kvantum".source = "${dotfilesSource}/dots/.config/Kvantum";
@@ -202,41 +238,39 @@ in
       "quickshell".source =
         let
           qsToKitty = pkgs.writeShellScript "qs-to-kitty.sh" ''
-                SRC="$HOME/.local/state/quickshell/user/generated/colors.json"
-                OUT="$HOME/.local/state/quickshell/user/generated/terminal/kitty-colors.conf"
-                
-                mkdir -p "$(dirname "$OUT")"
+            SRC="$HOME/.local/state/quickshell/user/generated/colors.json"
+            OUT="$HOME/.local/state/quickshell/user/generated/terminal/kitty-colors.conf"
 
-                jq -r '
-                  "background " + .background,
-                  "foreground " + .on_background,
-                  "selection_background " + .surface_container_high,
-                  "selection_foreground " + .on_surface,
-                  "cursor " + .primary,
-                  "cursor_text_color " + .background,
+            mkdir -p "$(dirname "$OUT")"
 
-                  "color0 "  + .surface_container_lowest,
-                  "color1 "  + .error,
-                  "color2 "  + .primary,
-                  "color3 "  + .tertiary,
-                  "color4 "  + .primary_fixed_dim,
-                  "color5 "  + .secondary,
-                  "color6 "  + .tertiary,
-                  "color7 "  + .on_surface,
+            jq -r '
+              "background " + .background,
+              "foreground " + .on_background,
+              "selection_background " + .surface_container_high,
+              "selection_foreground " + .on_surface,
+              "cursor " + .primary,
+              "cursor_text_color " + .background,
 
-                  "color8 "  + .outline,
-                  "color9 "  + .error_container,
-                  "color10 " + .primary_container,
-                  "color11 " + .tertiary_container,
-                  "color12 " + .primary,
-                  "color13 " + .secondary_container,
-                  "color14 " + .tertiary_container,
-                  "color15 " + .inverse_on_surface
-                ' "$SRC" > "$OUT"
+              "color0 "  + .surface_container_lowest,
+              "color1 "  + .error,
+              "color2 "  + .primary,
+              "color3 "  + .tertiary,
+              "color4 "  + .primary_fixed_dim,
+              "color5 "  + .secondary,
+              "color6 "  + .tertiary,
+              "color7 "  + .on_surface,
 
-                for socket in /tmp/kitty /tmp/mykitty; do
-                [ -S "$socket" ] && kitty @ --to "unix:$socket" set-colors --all "$OUT" 2>/dev/null || true
-            done
+              "color8 "  + .outline,
+              "color9 "  + .error_container,
+              "color10 " + .primary_container,
+              "color11 " + .tertiary_container,
+              "color12 " + .primary,
+              "color13 " + .secondary_container,
+              "color14 " + .tertiary_container,
+              "color15 " + .inverse_on_surface
+            ' "$SRC" > "$OUT"
+
+            kitty @ --to "unix:@kitty" set-colors --all --configured "$OUT" 2>/dev/null || true
           '';
 
         in
@@ -244,6 +278,7 @@ in
           {
             buildInputs = [
               pkgs.bash
+              pkgs.perl
               config.programs.illogical-impulse.internal.pythonEnv
             ];
           }
@@ -255,8 +290,9 @@ in
                         # The complex shebang tried to source a venv, but we provide pythonEnv directly via Nix
                         find $out -name "*.py" -print0 | xargs -0 sed -i 's|^#!.*ILLOGICAL_IMPULSE_VIRTUAL_ENV.*|#!/usr/bin/env python3|'
 
-                        # Suppress permission errors when writing to /dev/pts in applycolor.sh
-                        sed -i 's|/dev/pts/\*|/dev/pts/* 2>/dev/null|' $out/ii/scripts/colors/applycolor.sh
+                        # Fix floating image widget rendering at 1x1px (see imageDownloaderFixScript above)
+                        perl ${imageDownloaderFixScript} $out/ii/modules/common/utils/ImageDownloaderProcess.qml
+
 
             	    # Inject qs-to-kitty.sh call into post_process in switchwall.sh
                         sed -i 's|"\$SCRIPT_DIR/code/material-code-set-color.sh" &|\0\n    "\$SCRIPT_DIR/qs-to-kitty.sh" \&|' \
@@ -376,6 +412,16 @@ in
           $DRY_RUN_CMD sed -i 's/^icon_theme=OneUI-light$/icon_theme=OneUI-light/' "$qt_conf"
         fi
       done
+
+      # applycolor.sh copies terminal/sequences.txt from the nix store (read-only)
+      # then sed-replaces colors into it. If the destination is read-only the cp
+      # and sed both fail, leaving stale old colors that get written to pts and
+      # revert kitty's theme. Ensure the file is writable so applycolor.sh can
+      # update it on every wallpaper switch.
+      seqFile="$HOME/.local/state/quickshell/user/generated/terminal/sequences.txt"
+      if [ -f "$seqFile" ]; then
+        $DRY_RUN_CMD chmod u+w "$seqFile"
+      fi
     '';
   };
 }

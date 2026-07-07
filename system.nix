@@ -41,7 +41,10 @@
   networking.firewall = {
     enable = true;
     allowedTCPPorts = [
-      31311
+      443
+      80
+      53317 # for localsend
+      8000
     ];
     trustedInterfaces = [ "tailscale0" ];
     allowedUDPPorts = [ 41641 ];
@@ -49,12 +52,23 @@
 
   services.resolved = {
     enable = true;
-    dnssec = "true";
+    settings.Resolve.DNS = [
+      "1.1.1.1"
+      "1.0.0.1"
+    ];
   };
 
   hardware.bluetooth = {
     enable = true;
     powerOnBoot = true;
+    settings = {
+      Policy = {
+        AutoEnable = true;
+      };
+      General = {
+        FastConnectable = true;
+      };
+    };
   };
 
   # ---------------------------
@@ -75,17 +89,19 @@
   # ---------------------------
   programs.hyprland = {
     enable = true;
+    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    portalPackage =
+      inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };
 
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
-  services.xserver.videoDrivers = [ "nvidia" ];
 
   services.greetd = {
     enable = true;
     settings = {
       default_session = {
-        command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --remember --cmd start-hyprland";
-        user = "nodev";
+        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --cmd start-hyprland";
+        user = "greeter";
       };
     };
   };
@@ -97,7 +113,6 @@
     networkmanager
     lm_sensors
     aubio
-    material-symbols
     nerd-fonts.caskaydia-cove
     swappy
     libqalculate
@@ -110,13 +125,11 @@
     jq
     eza
     adw-gtk3
-    papirus-icon-theme
     libsForQt5.qt5ct
     kdePackages.qt6ct
-    libsForQt5.qt5.qtpositioning
+    qt5.qtpositioning
     wl-clipboard
     adwaita-icon-theme
-    noto-fonts-cjk-sans
   ];
 
   fonts.packages = with pkgs; [
